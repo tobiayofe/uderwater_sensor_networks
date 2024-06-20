@@ -1,0 +1,5 @@
+% This function normalises residual enrgy considering that they are
+% usuallly large
+function normed_res_energy = residual_energy_norm(node_energy,initial_energy)
+    normed_res_energy = 1 - (node_e
+end
