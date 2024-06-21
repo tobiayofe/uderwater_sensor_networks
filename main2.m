@@ -1,4 +1,14 @@
 clc; clear;
+
+% Application/interface initialisation
+msg = "The underwater sensor node networks";
+disp(msg);
+init = str2double(input("Press 1 to setup the sensor network: "));
+switch init
+    case 1
+        disp("Press 1 to set default values\nPress 2 to set UWSN initial values: ");
+    case 2
+end
 % Initialising base paper parameters
 node_t_range=2;%km
 t_energy=20; % Node initial energy
