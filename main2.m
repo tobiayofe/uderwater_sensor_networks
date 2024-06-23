@@ -1,6 +1,6 @@
 clc; clear;
 % Initialising base paper parameters
-node_t_range=2;%km
+node_t_range=2000; % In metres
 t_energy=20; % Node initial energy
 total_net_area=[10, 10, 10];%x=10km, y=10km, z=10km
 transmission_power=50;%In Watts(W)
@@ -21,57 +21,40 @@ min_power_recv=10;%Minimum reception power in dB
 
 % Application/interface initialisation
 msg = "The underwater sensor node networks";
-disp(msg);
-init = str2double(input("Press 1 to setup the sensor network: "));
+disp(msg); clear msg;
+init = input("Press 1 to setup the sensor network: ");
 switch init
     case 1
         disp("Press 1 to set default values\nPress 2 to set UWSN initial values: ");
-        press = input();
+        press = input("");
         if press == 1
-            
         end
-        
         if press == 2
             node_t_range = input("Enter the node transmission range in metres: ");
-            t_energy= input("Enter the node initial transmission energy");
-            disp("Enter the total net area of the UWSN in meters.\n");
+            t_energy= input("Enter the node initial transmission energy: ");
+            disp("Enter the total net area of the UWSN in meters.\n: ");
             x_coord = input("Width: "); y_coord = input("Length: "); z_coord = input("Height: ");
             total_net_area=[x_coord, y_coord, z_coord];
             transmission_power= input("Enter transmission power in Watts(W): ");%In Watts(W)
             receive_power=input("Enter nodes reception power: ");
             frequency= input("Enter transmission frequency in KHz: ");
-            bandwidth= input("Transmission bandwith in KHz");
-            signal_prop_speed=input("Enter signal propagation speed in m/s");
+            bandwidth= input("Transmission bandwith in KHz: ");
+            signal_prop_speed=input("Enter signal propagation speed in m/s: ");
             rand_walk=input("Random walk in m/s: ");
-            ack_packet_size=50;%Acknowledgement packet size in bits
-            n_req_size=50;% Size of N_request
-            data_rate=16;%Data size rate in Kilo bits per seconds (Kbps)
-            data_payload_size=72;%In Bytes
-            data_header_size=11;%In Bytes
-            max_pow_trans=90;%Maximum transmission power in dB
-            min_power_recv=10;%Minimum reception power in dB
+            ack_packet_size= input("Set the acknowledgement packet size: ");%Acknowledgement packet size in bits
+            n_req_size=input("Set size of N_request packets: ");% Size of N_request
+            data_rate=input("Set the data rate size in kilobits per seconds (Kbps): ");%Data size rate in Kilo bits per seconds (Kbps)
+            data_payload_size=input("Set the payload size in bytes: ");%In Bytes
+            data_header_size=input("Set the data header size in bytes: ");%In Bytes
+            max_pow_trans=input("Enter the maximum transmission power for nodes in dB: ");%Maximum transmission power in dB
+            min_power_recv=input("Enter the minimum power required for reception in node in dB: ");%Minimum reception power in dB
         end
+        
     case 2
+        disp("What are you to do");
 end
 
-% Create nodes objects
-nodeCount=100;
-nodeObjArray(nodeCount,1) = Node();
-%nodeObjArray = zeros(nodeCount:1);
-nodeObjArray=createNodeObj(nodeCount,"NNNN",nodeObjArray,8);
-
-% Create surface sink nodes objects
-surface_sinks=9;
-sinkNodeObjArray(surface_sinks,1)=Node();
-sinkNodeObjArray=createNodeObj(surface_sinks,"SSNN",sinkNodeObjArray,10);
-
-%Create underwater sink nodes objects
-underwater_sinks=2;
-underwaterSinkNodeObjArray(underwater_sinks,1)=Node();
-underwaterSinkNodeObjArray=createNodeObj(underwater_sinks,"UWSN",underwaterSinkNodeObjArray,6);
-
-% obtain PFN vectors for each node, bet it SN, UWSN, or nodes
-all_nodes = [sinkNodeObjArray; underwaterSinkNodeObjArray; nodeObjArray];
+all_nodes = node_configurator();
 
 for i=1:length(all_nodes)
     nodesExcludeSrcArr = all_nodes;

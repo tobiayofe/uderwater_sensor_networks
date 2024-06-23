@@ -40,18 +40,16 @@ switch init
             transmission_power= input("Enter transmission power in Watts(W): ");%In Watts(W)
             receive_power=input("Enter nodes reception power: ");
             frequency= input("Enter transmission frequency in KHz: ");
-            bandwidth= input();4;%KHz
-            signal_prop_speed=1500;%signal propagation speed = 1500m/s
-            rand_walk=2;%random walk = 2m/s
-            node_left_mov_prob=0.5;%Probability of node moving to the left
-            node_right_mov_prob=1-node_left_mov_prob;%Probability of node moving to the right
-            ack_packet_size=50;%Acknowledgement packet size in bits
-            n_req_size=50;% Size of N_request
-            data_rate=16;%Data size rate in Kilo bits per seconds (Kbps)
-            data_payload_size=72;%In Bytes
-            data_header_size=11;%In Bytes
-            max_pow_trans=90;%Maximum transmission power in dB
-            min_power_recv=10;%Minimum reception power in dB
+            bandwidth= input("Transmission bandwith in KHz: ");
+            signal_prop_speed=input("Enter signal propagation speed in m/s: ");
+            rand_walk=input("Random walk in m/s: ");
+            ack_packet_size= input("Set the acknowledgement packet size: ");%Acknowledgement packet size in bits
+            n_req_size=input("Set size of N_request packets: ");% Size of N_request
+            data_rate=input("Set the data rate size in kilobits per seconds (Kbps): ");%Data size rate in Kilo bits per seconds (Kbps)
+            data_payload_size=input("Set the payload size in bytes: ");%In Bytes
+            data_header_size=input("Set the data header size in bytes: ");%In Bytes
+            max_pow_trans=input("Enter the maximum transmission power for nodes: ");%Maximum transmission power in dB
+            min_power_recv=i10;%Minimum reception power in dB
         end
     case 2
 end
