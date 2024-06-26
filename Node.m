@@ -31,7 +31,8 @@ classdef Node
             vect_num = counter;
         end
         
-        function send = transmit(~,data, app_port_num,dstIP,dstMac)
+        %function send = transmit(~,data, app_port_num,dstIP,dstMac)
+        function send = transmit(~,data, app_port_num,dstMac)
             srcIP = ip_address(); srcMac = obj.id;
             if data=="broadcast_proto"
                 proto_type = "UDP";
@@ -40,8 +41,11 @@ classdef Node
             else
                 proto_type = "TCP";
                 encapsulation = Proto(proto_type);
-                segment_size = 20; % Bytes
-                send = encapsulation.encapsulation(data,segment_size,app_port_num,srcIP,dstIP,srcMac,dstMac);
+                % segment_size = 20; % Bytes % To be considered later
+                % send = encapsulation.encapsulation(data,segment_size,app_port_num,srcIP,dstIP,srcMac,dstMac);
+                % The send variable arguments would be considered later.
+                
+                send = encapsulation.encapsulation(data,app_port_num,obj.id,dstMac);
             end
             
             function [receiver] = rcv_data(obj)

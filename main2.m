@@ -2,7 +2,7 @@ clc; clear;
 % Initialising base paper parameters
 node_t_range=2000; % In metres
 t_energy=20; % Node initial energy
-total_net_area=[10, 10, 10];%x=10km, y=10km, z=10km
+total_net_area=[10000, 10000, 10000];%x=10km, y=10km, z=10km
 transmission_power=50;%In Watts(W)
 receive_power=158e-6;
 frequency=12;%KHz
@@ -18,15 +18,13 @@ data_payload_size=72;%In Bytes
 data_header_size=11;%In Bytes
 max_pow_trans=90;%Maximum transmission power in dB
 min_power_recv=10;%Minimum reception power in dB
-
 % Application/interface initialisation
 msg = "The underwater sensor node networks";
 disp(msg); clear msg;
 init = input("Press 1 to setup the sensor network: ");
 switch init
     case 1
-        disp("Press 1 to set default values\nPress 2 to set UWSN initial values: ");
-        press = input("");
+        press = input("Press 1 to set default values" + "\n" + "Press 2 to set UWSN initial values: ");
         if press == 1
         end
         if press == 2
@@ -35,7 +33,7 @@ switch init
             disp("Enter the total net area of the UWSN in meters.\n: ");
             x_coord = input("Width: "); y_coord = input("Length: "); z_coord = input("Height: ");
             total_net_area=[x_coord, y_coord, z_coord];
-            transmission_power= input("Enter transmission power in Watts(W): ");%In Watts(W)
+            transmission_power= input("Enter transmission power in Watts(W): ");% In Watts(W)
             receive_power=input("Enter nodes reception power: ");
             frequency= input("Enter transmission frequency in KHz: ");
             bandwidth= input("Transmission bandwith in KHz: ");
@@ -52,9 +50,13 @@ switch init
         
     case 2
         disp("What are you to do");
+    otherwise
+        disp("Invalid number. Input values according to specified instruction.");
 end
 
 all_nodes = node_configurator();
+
+
 
 for i=1:length(all_nodes)
     nodesExcludeSrcArr = all_nodes;
@@ -63,11 +65,10 @@ for i=1:length(all_nodes)
     all_nodes(i).pfn_num = all_nodes(i).vector_count(all_nodes(i).pfn);
 end
 
-for a_nodes = 1:length(all_nodes) % all nodes - a_node
+for a_nodes = 1:length(all_nodes)
     detected_nodes_id = zeros(1,111);
-    for  nodes= 1:length(all_nodes(a_nodes).pfn) % nodes only
+    for  nodes= 1:length(all_nodes(a_nodes).pfn)
         Dk=0;
-        
         if  all_nodes(a_nodes).pfn(nodes)~=-Inf && ... 
             all_nodes(a_nodes).id ~= all_nodes(nodes).id
             node_x = [all_nodes(nodes).coord(1), all_nodes(a_nodes).coord(1)];
@@ -75,7 +76,7 @@ for a_nodes = 1:length(all_nodes) % all nodes - a_node
             node_z = [all_nodes(nodes).coord(3), all_nodes(a_nodes).coord(3)];
             Dk = euclidean_distance(node_x, node_y, node_z);
             
-            if Dk <= 2 % node_t_range
+            if Dk <= node_t_range % node_t_range
                 detected_nodes_id(1,nodes) = nodes;
             else
                 detected_nodes_id(1,nodes) = -Inf;
@@ -88,8 +89,71 @@ end
 % Count the number of nodes in range for each nodes
 for i=1:length(all_nodes)
     all_nodes(i).nodes_in_range_count = all_nodes(i).vector_count(all_nodes(i).nodes_in_range);
-    %nodeObjArray(i).pfn_num = nodeObjArray(i).vector_count(nodeObjArray(i).pfn);
-    %nodeObjArray(i).pfn_num = nodeObjArray.pfn_count(nodeObjArray(i).pfn);
+end
+
+resp = num2str(input("Do you wish to list out all the nodes" + ...
+    " in the under water network environment?(Yes/No)"));
+if lower(resp)~="no"
+    resp="yes";
+else
+    resp = lower(resp);
+end
+
+if resp=="no"
+else
+    for i=1:length(all_nodes)
+        if startsWith((all_nodes(i).id),"SSNN") || startsWith((all_nodes(i).id),"UWSN")
+            disp("Node "+i+":- ****"+all_nodes(i).id+"****");
+        else
+            disp("Node "+i+":- "+all_nodes(i).id);
+        end
+    end
+end
+looper=false;
+node_select=[];
+while looper==false
+    node_select = input("Enter the node you wish to transmit with - input a number between 1 and 100: ");
+    if startsWith(all_nodes(node_select).id, "UWSN") || startsWith(all_nodes(node_select).id, "SSNN")
+        disp("This is a sink node. Enter another number");
+    else
+        fprintf("You select node "+ node_select+"\r");
+        looper=true;
+    end
+end
+looper(1)=[];
+node_select = struct( "node_number",node_select,"node",all_nodes(node_select) );
+if node_select.node.nodes_in_range_count >= 1
+    maxi=[]; temp=1;
+    while true
+        if node_select.node.nodes_in_range(temp)>0 && ...
+           node_select.node.nodes_in_range(1)~=Inf && ...
+           node_select.node.nodes_in_range(1)~=-Inf
+            maxi = node_select.node(node_select.node.nodes_in_range(1));
+            break;
+        end
+        temp = temp+1;
+    end
+    clear temp;
+    neighbour = 2;
+    while neighbour < length(node_select.node.nodes_in_range) ...
+          && node_select.node.nodes_in_range(neighbour)>0
+        if ( startsWith( node_select.node.nodes_in_ranger(neighbour), "SSNN" ) ...
+        || startsWith( node_select.node.nodes_in_ranger(neighbour), "UWSN" ) )...
+                && ( ~startsWith(maxi,"SSNN") || ~startsWith(maxi,"UWSN") )
+            maxi = node_select.node.nodes_in_range(neighbour);
+     	elseif maxi < node_select.node.nodes_in_range(neighbour)
+            maxi = node_select.node.nodes_in_range(neighbour);
+        end
+        if startsWith(maxi,"SSNN") || startsWith(maxi,"UWSN")
+            break;
+        end
+        neighbour = neighbour + 1;
+    end
+    data = "broadcast"; app_port_num = 1; 
+    dstMac = all_nodes(maxi).id;
+    node_select.node.transmit(data,app_port_num,dstMac);
+else
+    disp("No neighbour detected for node");
 end
 
 % Next line of actions
