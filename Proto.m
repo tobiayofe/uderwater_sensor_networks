@@ -7,8 +7,7 @@ classdef Proto
     
     methods
         function obj = Proto(proto_type)
-            obj.proto = proto_type;
-            obj = Proto();          
+            obj.proto = proto_type;         
         end
         
         function [encaped] = encapsulation_broadcast(~)
@@ -18,7 +17,7 @@ classdef Proto
             encaped = encap;
         end
         
-        function [encaped] = encapsulation_data (data,segment_size,app_port_num,srcIP,dstIP,srcMac,dstMac)
+        function [encaped] = data_encapsulation (obj,data,segment_size,app_port_num,srcIP,dstIP,hop,srcMac,dstMac)
             % layer 4 - application layer setup
             sessID = round( rand()*50+1 );
             lay4 = [data,sessID];
@@ -32,7 +31,8 @@ classdef Proto
             lay2 = [srcIP, dstIP];
             encap.lay2 = lay2;
             % layer 1 - Network access layer setup
-            lay1 = ["data", srcMac, dstMac];
+            hop_status = hop;
+            lay1 = [hop_status, srcMac, dstMac];
             encap.lay1 = lay1;
             encaped = encap;
         end

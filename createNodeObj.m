@@ -10,6 +10,9 @@ for node=1:nodeCount
     bcast_id=bcast_qualifier+":"+num2str(node)+":"+num2str(node);
     nodeObj.id = bcast_id; nodeObj.coord = node_coord;
     nodeObj.t_energy = floor(rand*20)+1;
+    % Investigate why the function below is not working
+    %nodeObj.ip_address(node);
+    nodeObj.ip_addr = "192.168.1."+node;
     nodeObjArrayInit(node) = nodeObj;
 end
 nodeObjArr=nodeObjArrayInit;

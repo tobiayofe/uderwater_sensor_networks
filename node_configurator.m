@@ -17,5 +17,4 @@ underwaterSinkNodeObjArray=createNodeObj(underwater_sinks,"UWSN",underwaterSinkN
 
 % obtain PFN vectors for each node, bet it SN, UWSN, or nodes
 all_nodes = [sinkNodeObjArray; underwaterSinkNodeObjArray; nodeObjArray];
-% all_nodes=all_nodes(randperm(length(all_nodes))); % This is experimental. Evaluate if it's to be removed
 end

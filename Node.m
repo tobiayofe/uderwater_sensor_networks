@@ -2,15 +2,14 @@ classdef Node
     properties
         id; coord;
         t_energy; % Node's initial energy
-        k=1; residual_energy; pfn=[];
-        pfn_num; nodes_in_range=[]; nodes_in_range_count;
-        data_snt = []; data_rcv = [];
-  
+        k=1; residual_energy; pfn=[]; pfn_num; nodes_in_range=[];
+        nodes_in_range_count; data_snt = []; data_rcv = struct();
+        data_rcv_count=0; ip_addr; routing_pathdepth = [];
     end
     
     methods
         function obj = Node()
-            % obj.pfn_num = obj.pfn_count();
+            
         end
         function [euclid] = node2sink_distance(x,y,z)
             euclid = euclidean_distance(x,y,z);
@@ -31,9 +30,7 @@ classdef Node
             vect_num = counter;
         end
         
-        %function send = transmit(~,data, app_port_num,dstIP,dstMac)
-        function send = transmit(~,data, app_port_num,dstMac)
-            srcIP = ip_address(); srcMac = obj.id;
+        function send = transmit(obj,data,app_port_num,pfn)
             if data=="broadcast_proto"
                 proto_type = "UDP";
                 encapsulation = Proto(proto_type);
@@ -41,21 +38,45 @@ classdef Node
             else
                 proto_type = "TCP";
                 encapsulation = Proto(proto_type);
-                % segment_size = 20; % Bytes % To be considered later
-                % send = encapsulation.encapsulation(data,segment_size,app_port_num,srcIP,dstIP,srcMac,dstMac);
-                % The send variable arguments would be considered later.
-                
-                send = encapsulation.encapsulation(data,app_port_num,obj.id,dstMac);
+                segment_size = 20; % Bytes
+                srcMac = obj.id;
+                dstMac = pfn.id;
+                srcIP = obj.ip_addr;
+                dstIP = pfn.ip_addr;
+                if startsWith(dstMac,"SSNN") || startsWith(dstMac,"UWSN")
+                    hop = 0;
+                else
+                    hop = 1;
+                end
+                send = encapsulation.data_encapsulation(data,segment_size,...
+                       app_port_num,srcIP,dstIP,hop,srcMac,dstMac);
+                send = pfn.rcv_data(send);
             end
             
-            function [receiver] = rcv_data(obj)
-                receiver = [];
-            end
-            
-            function ip_addr = ip_address(~)
-                ip_addr = "192.168.1."+obj.id;
-            end
-
         end
+        
+        function [obj] = rcv_data(obj,rcvObj)
+                dstIP = rcvObj.lay2(2);
+                if str2double(rcvObj.lay1(2))==1 || rcvObj.lay1(2)=="1"
+                    disp("Not the final destination");
+                    disp("Routing to node with IP address" + dstIP);
+                    obj.send(rcvObj);
+                else
+                    srcNode = rcvObj.lay2(1);
+                    srcNode = strrep( srcNode , "." , "_" );
+                    srcNode = "IP"+srcNode;
+                    obj.data_rcv_count  = obj.data_rcv_count + 1;
+                    obj.data_rcv = obj.data_rcv;struct(srcNode, rcvObj);
+                end
+        end
+        
+        function [obj] = ip_address(obj,node)
+                obj.ip_addr = "192.168.1." + node;
+            end
+            
+        function depth_info = info_request(obj)
+            depth_info = [obj.id, obj.coord(3)];
+        end
+
     end
 end

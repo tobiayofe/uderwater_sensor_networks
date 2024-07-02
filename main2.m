@@ -56,8 +56,6 @@ end
 
 all_nodes = node_configurator();
 
-
-
 for i=1:length(all_nodes)
     nodesExcludeSrcArr = all_nodes;
     nodesExcludeSrcArr(i).coord(3)=-Inf;
@@ -83,7 +81,14 @@ for a_nodes = 1:length(all_nodes)
             end
         end
     end
-    all_nodes(a_nodes).nodes_in_range = detected_nodes_id;
+    node_in_range_id=[];
+    for index=1:length(detected_nodes_id)
+        if detected_nodes_id(index)>0
+            node_in_range_id = [node_in_range_id,detected_nodes_id(index)];
+        end
+    end
+    all_nodes(a_nodes).nodes_in_range = node_in_range_id;
+    clear node_in_range_id;
 end
 
 % Count the number of nodes in range for each nodes
@@ -105,10 +110,13 @@ else
         if startsWith((all_nodes(i).id),"SSNN") || startsWith((all_nodes(i).id),"UWSN")
             disp("Node "+i+":- ****"+all_nodes(i).id+"****");
         else
-            disp("Node "+i+":- "+all_nodes(i).id);
+            disp("Node "+i+":- "+all_nodes(i).id + ".      PFN neighbour: "+ ...
+                all_nodes(i).nodes_in_range_count);
         end
     end
 end
+clear resp;
+
 looper=false;
 node_select=[];
 while looper==false
@@ -117,47 +125,60 @@ while looper==false
         disp("This is a sink node. Enter another number");
     else
         fprintf("You select node "+ node_select+"\r");
-        looper=true;
     end
+    looper=true;
 end
-looper(1)=[];
+clear looper;
 node_select = struct( "node_number",node_select,"node",all_nodes(node_select) );
-if node_select.node.nodes_in_range_count >= 1
-    maxi=[]; temp=1;
-    while true
-        if node_select.node.nodes_in_range(temp)>0 && ...
-           node_select.node.nodes_in_range(1)~=Inf && ...
-           node_select.node.nodes_in_range(1)~=-Inf
-            maxi = node_select.node(node_select.node.nodes_in_range(1));
-            break;
-        end
-        temp = temp+1;
-    end
-    clear temp;
-    neighbour = 2;
-    while neighbour < length(node_select.node.nodes_in_range) ...
-          && node_select.node.nodes_in_range(neighbour)>0
-        if ( startsWith( node_select.node.nodes_in_ranger(neighbour), "SSNN" ) ...
-        || startsWith( node_select.node.nodes_in_ranger(neighbour), "UWSN" ) )...
-                && ( ~startsWith(maxi,"SSNN") || ~startsWith(maxi,"UWSN") )
-            maxi = node_select.node.nodes_in_range(neighbour);
-     	elseif maxi < node_select.node.nodes_in_range(neighbour)
-            maxi = node_select.node.nodes_in_range(neighbour);
-        end
-        if startsWith(maxi,"SSNN") || startsWith(maxi,"UWSN")
-            break;
-        end
-        neighbour = neighbour + 1;
-    end
-    data = "broadcast"; app_port_num = 1; 
-    dstMac = all_nodes(maxi).id;
-    node_select.node.transmit(data,app_port_num,dstMac);
-else
-    disp("No neighbour detected for node");
-end
+%% Depth-based routing
+disp("Obtaining first level depth information for node "+ node_select.node_number );
+depth_based_pfn = node_transaction(all_nodes,node_select,"depth");
+first_level_node_selected = find(arrayfun(@(node) isequal(node, depth_based_pfn), all_nodes));
+disp("Node "+first_level_node_selected+ " selected");
+disp("Node id: "+depth_based_pfn.id);
+disp("Node IP address: "+depth_based_pfn.ip_addr);
+disp("Node depth: "+depth_based_pfn.coord(3));
+
+% Second-level depth information for selected source node (node_select.node_number)
+disp("Obtaining second level depth information for node "+ node_select.node_number );
+depth_based_pfn = struct("node_number",first_level_node_selected,...
+                "node",all_nodes(arrayfun(@(node) isequal(node, depth_based_pfn), all_nodes)));
+second_level_depth_based_pfn = node_transaction(all_nodes,depth_based_pfn,"depth");
+second_level_node_selected = find(arrayfun(@(node) isequal(node, second_level_depth_based_pfn), all_nodes));
+disp("Node "+second_level_node_selected+ " selected");
+disp("Node id: "+second_level_depth_based_pfn.id);
+disp("Node IP address: "+second_level_depth_based_pfn.ip_addr);
+disp("Node depth: "+second_level_depth_based_pfn.coord(3));
+
+%% Neighbour-based routing
+disp("Obtaining first level depth information based on neighbour for node "+ node_select.node_number );
+neighbour_based_pfn = node_transaction(all_nodes,node_select,"neighbour");
+n_first_level_node_selected = find(arrayfun(@(node) isequal(node, neighbour_based_pfn), all_nodes));
+disp("Node "+n_first_level_node_selected+ " selected");
+disp("Node id: "+neighbour_based_pfn.id);
+disp("Node IP address: "+neighbour_based_pfn.ip_addr);
+disp("Node depth: "+neighbour_based_pfn.coord(3));
+
+% Obtain second-level neighbour information for selected node(node_select.node_number)
+disp("Obtaining second level depth information based on for node "+ node_select.node_number );
+neighbour_based_pfn = struct("node_number",n_first_level_node_selected,...
+                        "node",all_nodes(n_first_level_node_selected));
+second_level_neighbour_based_pfn = node_transaction(all_nodes,neighbour_based_pfn,"neighbour");
+n_second_level_node_selected = find(arrayfun(@(node) isequal(node, second_level_neighbour_based_pfn), all_nodes));
+disp("Node "+n_second_level_node_selected+ " selected");
+disp("Node id: "+second_level_neighbour_based_pfn.id);
+disp("Node IP address: "+second_level_neighbour_based_pfn.ip_addr);
+disp("Node depth: "+second_level_neighbour_based_pfn.coord(3));
+
+disp("What next!!!");
+
+
 
 % Next line of actions
 % Write code to select a node of interest
+    % Obtain depth of node in range of source node - 1st contact node depth
+    % Obtain the depth of node in range of 1st contact node - 2nd contact node
+    % The 2nd contact node transmits its depth to 1st contact node which then transmits to
+    % the source node
 % Write code to simulates transmission of data from source node to destination
 % Write code simulate transmission of data
-% Write code 
